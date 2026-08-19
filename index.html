@@ -1,0 +1,1621 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#4f46e5">
+  <title>KashVentas - Tu Negocio al Día</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="bg-slate-50 font-sans antialiased text-slate-800">
+
+  <!-- =========================================================
+       ACCESO
+       ========================================================= -->
+  <div id="auth-screen" class="min-h-screen flex items-center justify-center bg-slate-900 p-4 fixed inset-0 z-50">
+    <div class="bg-white rounded-3xl shadow-xl w-full max-w-md p-8 border border-slate-100">
+      <div class="text-center mb-8">
+        <span class="bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full uppercase">
+          Plataforma Segura
+        </span>
+        <h1 class="text-2xl font-black text-slate-900 mt-2">KashVentas 🚀</h1>
+        <p id="auth-subtitle" class="text-sm text-slate-500 mt-1">
+          Inicia sesión para acceder a tu negocio
+        </p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 mb-5 bg-slate-100 p-1 rounded-xl">
+        <button id="tab-login" onclick="mostrarModoAuth('login')"
+          class="py-2 rounded-lg text-xs font-bold bg-white text-indigo-700 shadow-sm">
+          Iniciar sesión
+        </button>
+        <button id="tab-register" onclick="mostrarModoAuth('register')"
+          class="py-2 rounded-lg text-xs font-bold text-slate-500">
+          Crear cuenta
+        </button>
+      </div>
+
+      <form id="login-form" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Correo electrónico</label>
+          <input type="email" id="login-email" required
+            class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+            placeholder="tu_negocio@gmail.com">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Contraseña</label>
+          <input type="password" id="login-password" required minlength="6"
+            class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+            placeholder="Mínimo 6 caracteres">
+        </div>
+
+        <button id="auth-submit" type="submit"
+          class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition shadow-lg text-sm">
+          Entrar a KashVentas
+        </button>
+      </form>
+
+      <button id="forgot-password" onclick="recuperarContrasena()"
+        class="w-full text-xs text-indigo-600 hover:underline font-bold mt-4">
+        ¿Olvidaste tu contraseña?
+      </button>
+
+      <p id="auth-message" class="hidden mt-4 text-xs rounded-xl p-3"></p>
+
+      <div class="text-center mt-6">
+        <p class="text-xs text-slate-400">
+          Cuenta nueva: obtén 30 días de prueba gratis.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       BLOQUEO
+       ========================================================= -->
+  <div id="pantalla-pago-bloqueo"
+    class="hidden min-h-screen flex items-center justify-center bg-slate-900 p-4 fixed inset-0 z-50">
+    <div class="bg-white rounded-3xl shadow-xl w-full max-w-md p-8 text-center space-y-4 border border-slate-100">
+      <span class="text-4xl">⏳</span>
+      <h2 class="text-2xl font-black text-slate-900">Tu periodo de prueba ha finalizado</h2>
+      <p class="text-sm text-slate-500">
+        Para seguir usando KashVentas, realiza el pago de tu membresía mensual.
+      </p>
+
+      <div class="bg-amber-50 p-4 rounded-2xl border border-amber-200 text-xs text-amber-800 font-semibold space-y-1">
+        <p>Plan Mensual: $199.00 MXN / mes</p>
+        <p class="text-[11px] font-normal">Pago mediante Mercado Pago.</p>
+      </div>
+
+      <a id="linkBotonPago" href="https://mpago.la/1qqZTgA" target="_blank" rel="noopener noreferrer"
+        class="block w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 rounded-xl transition shadow-md text-sm">
+        Pagar Membresía con Mercado Pago 💳
+      </a>
+
+      <button onclick="handleLogout()"
+        class="text-xs text-slate-400 hover:text-slate-600 font-bold underline block w-full py-2">
+        Cerrar sesión / Cambiar de cuenta
+      </button>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       APP
+       ========================================================= -->
+  <div id="app-screen" class="hidden min-h-screen flex flex-col">
+
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+      <div class="max-w-5xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between gap-3 items-center">
+        <div class="flex items-center space-x-2">
+          <span class="text-2xl">⚡</span>
+          <div>
+            <h1 class="font-bold text-lg text-slate-900 leading-tight">
+              Kash<span class="text-indigo-600">Ventas</span>
+            </h1>
+            <p class="text-[10px] text-slate-400">
+              Sesión:
+              <span id="user-display-email" class="font-bold text-indigo-600"></span>
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2 overflow-x-auto py-1 max-w-full">
+          <button onclick="cambiarVista('app')" id="btnApp"
+            class="text-xs bg-indigo-600 text-white px-3 py-2 rounded-xl font-bold whitespace-nowrap shadow-sm">
+            Mi Panel
+          </button>
+          <button onclick="cambiarVista('cortesDiarios')" id="btnCortesDiarios"
+            class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl font-bold whitespace-nowrap">
+            Cortes del Día 📋
+          </button>
+          <button onclick="cambiarVista('historial')" id="btnHistorial"
+            class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl font-bold whitespace-nowrap">
+            Historial General 📈
+          </button>
+          <button onclick="handleLogout()"
+            class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-600 px-3 py-2 rounded-xl font-bold whitespace-nowrap">
+            Cerrar Sesión 🚪
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- =======================================================
+         PANEL
+         ======================================================= -->
+    <main id="vistaApp" class="max-w-5xl mx-auto px-4 py-8 space-y-8 flex-grow w-full">
+
+      <div id="bannerSuscripcion"
+        class="bg-indigo-50 border border-indigo-200 rounded-3xl p-4 md:p-5 shadow-sm flex items-center gap-4">
+        <span id="iconoSub" class="text-2xl bg-indigo-100 p-2.5 rounded-2xl">⏳</span>
+        <div>
+          <h4 id="tituloSub" class="font-bold text-indigo-900 text-sm md:text-base">Estado de tu cuenta</h4>
+          <p id="textoSub" class="text-indigo-700 text-xs md:text-sm mt-0.5">Calculando...</p>
+        </div>
+      </div>
+
+      <div class="flex justify-end">
+        <button onclick="toggleGuia()" id="btnToggleGuia"
+          class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs px-4 py-2 rounded-xl border border-indigo-200">
+          💡 <span id="textoBtnGuia">¿Cómo usar?</span>
+        </button>
+      </div>
+
+      <section id="panelGuia"
+        class="bg-indigo-50 border-2 border-indigo-200 rounded-3xl p-6 shadow-sm space-y-3">
+        <div class="flex items-center space-x-2">
+          <span class="text-xl">👋</span>
+          <h3 class="font-extrabold text-indigo-900 text-base md:text-lg">
+            ¡Bienvenida a tu Contabilidad Digital!
+          </h3>
+        </div>
+        <p class="text-xs md:text-sm text-indigo-700">
+          Registra ventas, gastos y realiza tus cortes diarios.
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+          <div class="bg-white p-3 rounded-2xl border border-indigo-100 shadow-sm">
+            <p class="text-xs font-bold text-indigo-900">📥 1. Registra tu Venta</p>
+            <p class="text-[11px] text-slate-600 mt-1">Anota cliente, concepto y precio.</p>
+          </div>
+          <div class="bg-white p-3 rounded-2xl border border-indigo-100 shadow-sm">
+            <p class="text-xs font-bold text-indigo-900">📦 2. Anota tus Gastos</p>
+            <p class="text-[11px] text-slate-600 mt-1">Registra compras e inversiones.</p>
+          </div>
+          <div class="bg-white p-3 rounded-2xl border border-indigo-100 shadow-sm">
+            <p class="text-xs font-bold text-indigo-900">📊 3. Haz tu Corte</p>
+            <p class="text-[11px] text-slate-600 mt-1">Guarda el cierre del día.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="bannerAlertaMes"
+        class="hidden bg-amber-50 border border-amber-200 rounded-3xl p-5 shadow-sm items-start md:items-center justify-between gap-4">
+        <div class="flex items-start space-x-3">
+          <span class="text-2xl bg-amber-100 p-2 rounded-2xl">🔔</span>
+          <div>
+            <h3 id="tituloAlerta" class="font-bold text-amber-900 text-base">Aviso</h3>
+            <p id="textoAlerta" class="text-amber-700 text-xs md:text-sm mt-0.5"></p>
+          </div>
+        </div>
+        <button onclick="ocultarAlerta()"
+          class="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl">
+          Entendido
+        </button>
+      </section>
+
+      <section class="bg-gradient-to-r from-indigo-700 to-indigo-600 rounded-3xl p-6 md:p-8 text-white shadow-xl">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h2 class="text-2xl md:text-3xl font-extrabold">Hola 👋, así va tu negocio</h2>
+            <p class="text-indigo-100 mt-1 text-sm md:text-base">
+              Control acumulado mensual de ventas y gastos.
+            </p>
+          </div>
+
+          <div class="flex flex-wrap gap-2">
+            <button onclick="generarCorteCaja()"
+              class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs px-4 py-3 rounded-2xl shadow-md">
+              📋 Hacer y Guardar Corte de Hoy
+            </button>
+            <button onclick="imprimirReporteGeneral()"
+              class="bg-white hover:bg-indigo-50 text-indigo-700 font-bold text-xs px-4 py-3 rounded-2xl shadow-md">
+              📥 Descargar / Imprimir Reporte
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+          <div class="bg-white/15 backdrop-blur-md p-4 rounded-2xl border border-white/25">
+            <p class="text-xs text-indigo-200 uppercase font-semibold">Total Vendido (Mes)</p>
+            <p id="totalVendido" class="text-2xl md:text-3xl font-bold mt-1">$0.00</p>
+          </div>
+          <div class="bg-white/15 backdrop-blur-md p-4 rounded-2xl border border-white/25">
+            <p class="text-xs text-indigo-200 uppercase font-semibold">Gastos / Compras (Mes)</p>
+            <p id="totalGastos" class="text-2xl md:text-3xl font-bold mt-1">$0.00</p>
+          </div>
+          <div class="bg-white p-4 rounded-2xl text-slate-900 shadow-sm border-2 border-emerald-500/20">
+            <p class="text-xs text-emerald-600 uppercase font-bold">Tu Ganancia Real 💰</p>
+            <p id="gananciaReal" class="text-2xl md:text-3xl font-extrabold text-emerald-600 mt-1">$0.00</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex justify-between items-center">
+          <h3 class="font-bold text-lg">📈 Resumen Gráfico Mensual</h3>
+          <span class="text-xs text-slate-400 font-medium">Firebase</span>
+        </div>
+        <div class="relative w-full h-64">
+          <canvas id="graficaFinanzas"></canvas>
+        </div>
+      </section>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex items-center space-x-2">
+            <span class="text-xl">📄</span>
+            <h3 class="font-bold text-lg">Emitir Recibo / Nota de Venta</h3>
+          </div>
+
+          <form id="formVenta" class="space-y-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase">Nombre del Cliente</label>
+              <input type="text" id="inputCliente" required placeholder="Ej. María Pérez"
+                class="mt-1 w-full p-3 text-sm border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase">Descripción o Concepto</label>
+              <input type="text" id="inputDetalle" required placeholder="Ej. 1 Vestido"
+                class="mt-1 w-full p-3 text-sm border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase">Total a Cobrar ($)</label>
+              <input type="number" id="inputMontoVenta" required min="0.01" step="0.01" placeholder="0.00"
+                class="mt-1 w-full p-3 text-sm border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <button type="submit"
+              class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md">
+              Generar Recibo y Guardar
+            </button>
+          </form>
+        </div>
+
+        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex items-center space-x-2">
+            <span class="text-xl">📦</span>
+            <h3 class="font-bold text-lg">Registrar un Gasto o Inversión</h3>
+          </div>
+
+          <form id="formGasto" class="space-y-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase">¿Qué compraste o pagaste?</label>
+              <input type="text" id="inputConceptoGasto" required placeholder="Ej. Surtido de mercancía"
+                class="mt-1 w-full p-3 text-sm border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase">Cuánto costó ($)</label>
+              <input type="number" id="inputMontoGasto" required min="0.01" step="0.01" placeholder="0.00"
+                class="mt-1 w-full p-3 text-sm border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <button type="submit"
+              class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl shadow-md">
+              Guardar Gasto
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <section class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-4">
+          <h3 class="font-bold text-lg">📑 Recibos Emitidos este Mes</h3>
+          <div class="overflow-x-auto max-h-96">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-50 text-slate-400 text-xs uppercase border-b border-slate-100">
+                  <th class="p-2">Folio</th>
+                  <th class="p-2">Cliente</th>
+                  <th class="p-2">Total</th>
+                  <th class="p-2 text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tablaVentas" class="text-sm text-slate-600 divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-4">
+          <h3 class="font-bold text-lg">📦 Tus Gastos del Mes</h3>
+          <div class="overflow-x-auto max-h-96">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-50 text-slate-400 text-xs uppercase border-b border-slate-100">
+                  <th class="p-2">Concepto</th>
+                  <th class="p-2">Monto</th>
+                  <th class="p-2 text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tablaGastos" class="text-sm text-slate-600 divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- =======================================================
+         CORTES
+         ======================================================= -->
+    <main id="vistaCortesDiarios"
+      class="max-w-4xl mx-auto px-4 py-12 space-y-8 hidden flex-grow w-full">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h2 class="text-3xl font-extrabold text-slate-900">Bitácora de Cortes Diarios 📋</h2>
+          <p class="text-slate-500 text-sm mt-1">Cierres de caja guardados en Firebase.</p>
+        </div>
+        <button onclick="cambiarVista('app')"
+          class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-3 rounded-xl">
+          Volver al Panel
+        </button>
+      </div>
+
+      <section class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-4">
+        <div class="flex justify-between items-center">
+          <h3 class="font-bold text-lg">📅 Historial de Cierres Diarios</h3>
+          <button onclick="limpiarCortesDiarios()" class="text-xs text-rose-500 font-semibold hover:underline">
+            Borrar registros
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 text-slate-400 text-xs uppercase border-b border-slate-100">
+                <th class="p-3">Fecha</th>
+                <th class="p-3">Ventas</th>
+                <th class="p-3">Gastos</th>
+                <th class="p-3">Ganancia</th>
+                <th class="p-3 text-center">Desglose</th>
+              </tr>
+            </thead>
+            <tbody id="tablaCortesDiarios" class="text-sm text-slate-600 divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <!-- =======================================================
+         HISTORIAL
+         ======================================================= -->
+    <main id="vistaHistorial"
+      class="max-w-4xl mx-auto px-4 py-12 space-y-8 hidden flex-grow w-full">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h2 class="text-3xl font-extrabold text-slate-900">Historial General de Meses 📂</h2>
+          <p class="text-slate-500 text-sm mt-1">Resumen de todos los periodos.</p>
+        </div>
+        <button onclick="cambiarVista('app')"
+          class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-3 rounded-xl">
+          Volver al Panel
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <p class="text-xs text-slate-400 uppercase font-bold">Histórico Ventas</p>
+          <p id="historicoTotalVentas" class="text-2xl font-black text-slate-900 mt-1">$0.00</p>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <p class="text-xs text-slate-400 uppercase font-bold">Histórico Gastos</p>
+          <p id="historicoTotalGastos" class="text-2xl font-black text-slate-900 mt-1">$0.00</p>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <p class="text-xs text-slate-400 uppercase font-bold">Ganancia Neta Global</p>
+          <p id="historicoGananciaNeta" class="text-2xl font-black text-emerald-600 mt-1">$0.00</p>
+        </div>
+      </div>
+
+      <section class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
+        <h3 class="font-bold text-lg mb-4">📅 Resumen por Mes</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 text-slate-400 text-xs uppercase border-b border-slate-100">
+                <th class="p-3">Mes / Periodo</th>
+                <th class="p-3">Ventas</th>
+                <th class="p-3">Gastos</th>
+                <th class="p-3">Ganancia</th>
+              </tr>
+            </thead>
+            <tbody id="tablaHistorialMeses" class="text-sm text-slate-600 divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <!-- =======================================================
+         MODAL CORTE
+         ======================================================= -->
+    <div id="modalCorte"
+      class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex justify-center items-center px-4">
+      <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
+        <div class="flex justify-between items-center border-b pb-3">
+          <h3 class="font-extrabold text-lg">📋 Corte de Caja Guardado</h3>
+          <button onclick="cerrarCorteCaja()" class="text-slate-400 font-bold text-lg">✕</button>
+        </div>
+        <p class="text-xs text-slate-500">Puedes copiar el mensaje para enviarlo por WhatsApp.</p>
+        <textarea id="textoCorteWhatsApp" readonly
+          class="w-full h-36 p-3 text-xs font-mono bg-slate-50 border rounded-2xl outline-none"></textarea>
+        <div class="flex gap-2">
+          <button onclick="copiarCorteWhatsApp()"
+            class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-xs">
+            Copiar para WhatsApp 📱
+          </button>
+          <button onclick="cerrarCorteCaja()"
+            class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-xl text-xs">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =======================================================
+         MODAL DETALLE
+         ======================================================= -->
+    <div id="modalDetalleCorte"
+      class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex justify-center items-center px-4">
+      <div class="bg-white rounded-3xl p-6 max-w-xl w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center border-b pb-3">
+          <div>
+            <h3 id="detalleCorteTitulo" class="font-extrabold text-lg">Detalle del Corte</h3>
+            <p class="text-xs text-slate-400">Operaciones del día</p>
+          </div>
+          <button onclick="cerrarDetalleCorte()" class="text-slate-400 font-bold text-lg">✕</button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-indigo-50 p-3 rounded-2xl border border-indigo-100">
+            <p class="text-[10px] uppercase font-bold text-indigo-400">Total Vendido</p>
+            <p id="detTotalVentas" class="text-base font-black text-indigo-900">$0.00</p>
+          </div>
+          <div class="bg-rose-50 p-3 rounded-2xl border border-rose-100">
+            <p class="text-[10px] uppercase font-bold text-rose-400">Total Gastos</p>
+            <p id="detTotalGastos" class="text-base font-black text-rose-900">$0.00</p>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-xs uppercase text-indigo-600 mb-2">📑 Ventas</h4>
+          <div class="overflow-x-auto border rounded-2xl">
+            <table class="w-full text-left">
+              <tbody id="detalleCorteVentas" class="text-xs divide-y"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-xs uppercase text-rose-600 mb-2">📦 Gastos</h4>
+          <div class="overflow-x-auto border rounded-2xl">
+            <table class="w-full text-left">
+              <tbody id="detalleCorteGastos" class="text-xs divide-y"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 flex justify-between items-center font-bold">
+          <span class="text-xs uppercase text-emerald-800">Ganancia Neta:</span>
+          <span id="detalleCorteGanancia" class="text-emerald-700 text-lg font-black">$0.00</span>
+        </div>
+
+        <button onclick="cerrarDetalleCorte()"
+          class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl text-xs">
+          Cerrar Ventana
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       FIREBASE + APLICACIÓN
+       ========================================================= -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+    import {
+      getAnalytics,
+      isSupported as analyticsSupported
+    } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-analytics.js";
+
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+      sendPasswordResetEmail,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+
+    import {
+      getFirestore,
+      collection,
+      doc,
+      addDoc,
+      setDoc,
+      getDoc,
+      updateDoc,
+      deleteDoc,
+      getDocs,
+      query,
+      orderBy,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+
+    /* =========================================================
+       CONFIGURACIÓN FIREBASE
+       ========================================================= */
+    const firebaseConfig = {
+      apiKey: "AIzaSyCY0cgXB3rqpD0ZG6k7SlWtu1YygX2_TYs",
+      authDomain: "admini-621fd.firebaseapp.com",
+      databaseURL: "https://admini-621fd-default-rtdb.firebaseio.com",
+      projectId: "admini-621fd",
+      storageBucket: "admini-621fd.firebasestorage.app",
+      messagingSenderId: "910975048758",
+      appId: "1:910975048758:web:360d5d4b7a810da8bd8c97",
+      measurementId: "G-SM26KM2K6B"
+    };
+
+    const firebaseApp = initializeApp(firebaseConfig);
+    const auth = getAuth(firebaseApp);
+    const db = getFirestore(firebaseApp);
+
+    analyticsSupported()
+      .then(ok => {
+        if (ok) getAnalytics(firebaseApp);
+      })
+      .catch(() => {});
+
+    const nombresMeses = [
+      "Enero","Febrero","Marzo","Abril","Mayo","Junio",
+      "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
+    ];
+
+    let currentUser = null;
+    let perfilUsuario = null;
+    let ventas = [];
+    let gastos = [];
+    let listaCortesDiarios = [];
+    let historicoMeses = [];
+    let contadorFolio = 101;
+    let graficaFinanzas = null;
+    let modoAuth = "login";
+
+    /* =========================================================
+       UTILIDADES
+       ========================================================= */
+    function mostrarMensaje(texto, tipo = "error") {
+      const el = document.getElementById("auth-message");
+      el.textContent = texto;
+      el.className = "mt-4 text-xs rounded-xl p-3 " +
+        (tipo === "ok"
+          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+          : "bg-rose-50 text-rose-700 border border-rose-200");
+    }
+
+    function ocultarMensaje() {
+      document.getElementById("auth-message").className = "hidden";
+    }
+
+    function dinero(valor) {
+      return "$" + Number(valor || 0).toFixed(2);
+    }
+
+    function fechaLocalTexto() {
+      return new Date().toLocaleDateString("es-MX", {
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      });
+    }
+
+    function fechaHoraTexto() {
+      return new Date().toLocaleString("es-MX", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+
+    function mesKey(fecha = new Date()) {
+      return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, "0")}`;
+    }
+
+    function escaparHTML(texto) {
+      return String(texto ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function rutaNegocio(nombre) {
+      return collection(db, "negocios", currentUser.uid, nombre);
+    }
+
+    function perfilRef() {
+      return doc(db, "usuarios", currentUser.uid);
+    }
+
+    /* =========================================================
+       AUTENTICACIÓN
+       ========================================================= */
+    window.mostrarModoAuth = function(modo) {
+      modoAuth = modo;
+      const login = document.getElementById("tab-login");
+      const register = document.getElementById("tab-register");
+      const subtitle = document.getElementById("auth-subtitle");
+      const submit = document.getElementById("auth-submit");
+      const forgot = document.getElementById("forgot-password");
+
+      login.className = modo === "login"
+        ? "py-2 rounded-lg text-xs font-bold bg-white text-indigo-700 shadow-sm"
+        : "py-2 rounded-lg text-xs font-bold text-slate-500";
+
+      register.className = modo === "register"
+        ? "py-2 rounded-lg text-xs font-bold bg-white text-indigo-700 shadow-sm"
+        : "py-2 rounded-lg text-xs font-bold text-slate-500";
+
+      if (modo === "login") {
+        subtitle.textContent = "Inicia sesión para acceder a tu negocio";
+        submit.textContent = "Entrar a KashVentas";
+        forgot.classList.remove("hidden");
+      } else {
+        subtitle.textContent = "Crea tu cuenta y obtén 30 días de prueba";
+        submit.textContent = "Crear cuenta gratis";
+        forgot.classList.add("hidden");
+      }
+
+      ocultarMensaje();
+    };
+
+    document.getElementById("login-form").addEventListener("submit", async e => {
+      e.preventDefault();
+
+      const email = document.getElementById("login-email").value.trim().toLowerCase();
+      const password = document.getElementById("login-password").value;
+
+      if (!email || !password) return;
+
+      const submit = document.getElementById("auth-submit");
+      submit.disabled = true;
+      submit.textContent = "Procesando...";
+
+      try {
+        if (modoAuth === "register") {
+          const cred = await createUserWithEmailAndPassword(auth, email, password);
+          await crearPerfilInicial(cred.user);
+          mostrarMensaje("Cuenta creada correctamente.", "ok");
+        } else {
+          await signInWithEmailAndPassword(auth, email, password);
+        }
+      } catch (error) {
+        const mensajes = {
+          "auth/invalid-credential": "Correo o contraseña incorrectos.",
+          "auth/email-already-in-use": "Ese correo ya tiene una cuenta.",
+          "auth/invalid-email": "El correo no es válido.",
+          "auth/weak-password": "La contraseña debe tener al menos 6 caracteres.",
+          "auth/too-many-requests": "Demasiados intentos. Intenta más tarde."
+        };
+        mostrarMensaje(mensajes[error.code] || "No se pudo completar la operación.");
+      } finally {
+        submit.disabled = false;
+        submit.textContent = modoAuth === "login"
+          ? "Entrar a KashVentas"
+          : "Crear cuenta gratis";
+      }
+    });
+
+    window.recuperarContrasena = async function() {
+      const email = document.getElementById("login-email").value.trim().toLowerCase();
+      if (!email) {
+        mostrarMensaje("Escribe primero tu correo electrónico.");
+        return;
+      }
+
+      try {
+        await sendPasswordResetEmail(auth, email);
+        mostrarMensaje("Te enviamos un correo para restablecer tu contraseña.", "ok");
+      } catch (error) {
+        mostrarMensaje("No se pudo enviar el correo de recuperación.");
+      }
+    };
+
+    async function crearPerfilInicial(user) {
+      const ref = doc(db, "usuarios", user.uid);
+      const existente = await getDoc(ref);
+
+      if (existente.exists()) return;
+
+      const ahora = Date.now();
+      const vencimiento = ahora + 30 * 24 * 60 * 60 * 1000;
+
+      await setDoc(ref, {
+        email: user.email,
+        estado: "prueba",
+        fechaRegistro: ahora,
+        vencimientoPrueba: vencimiento
+      });
+    }
+
+    onAuthStateChanged(auth, async user => {
+      if (!user) {
+        currentUser = null;
+        mostrarLogin();
+        return;
+      }
+
+      currentUser = user;
+
+      try {
+        let perfilSnap = await getDoc(perfilRef());
+
+        if (!perfilSnap.exists()) {
+          await crearPerfilInicial(user);
+          perfilSnap = await getDoc(perfilRef());
+        }
+
+        perfilUsuario = perfilSnap.data();
+        await validarAccesoYEstado();
+      } catch (error) {
+        console.error(error);
+        mostrarMensaje("No se pudo cargar tu perfil. Revisa las reglas de Firestore.");
+        await signOut(auth);
+      }
+    });
+
+    function mostrarLogin() {
+      document.getElementById("auth-screen").classList.remove("hidden");
+      document.getElementById("app-screen").classList.add("hidden");
+      document.getElementById("pantalla-pago-bloqueo").classList.add("hidden");
+    }
+
+    window.handleLogout = async function() {
+      try {
+        await signOut(auth);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    async function validarAccesoYEstado() {
+      if (!perfilUsuario) return;
+
+      const estado = perfilUsuario.estado || "prueba";
+      const vencimiento = Number(perfilUsuario.vencimientoPrueba || 0);
+      const ahora = Date.now();
+
+      if (estado === "vencido" || (estado === "prueba" && ahora > vencimiento)) {
+        mostrarPantallaDeBloqueoReal();
+        return;
+      }
+
+      iniciarAplicacionConUsuario();
+    }
+
+    function mostrarPantallaDeBloqueoReal() {
+      document.getElementById("auth-screen").classList.add("hidden");
+      document.getElementById("app-screen").classList.add("hidden");
+      document.getElementById("pantalla-pago-bloqueo").classList.remove("hidden");
+    }
+
+    /* =========================================================
+       CARGA DE DATOS FIRESTORE
+       ========================================================= */
+    async function cargarVentas() {
+      ventas = [];
+      const q = query(rutaNegocio("ventas"), orderBy("creadoEn", "desc"));
+      const snap = await getDocs(q);
+
+      snap.forEach(d => {
+        const data = d.data();
+        ventas.push({
+          id: d.id,
+          ...data,
+          monto: Number(data.monto || 0)
+        });
+      });
+    }
+
+    async function cargarGastos() {
+      gastos = [];
+      const q = query(rutaNegocio("gastos"), orderBy("creadoEn", "desc"));
+      const snap = await getDocs(q);
+
+      snap.forEach(d => {
+        const data = d.data();
+        gastos.push({
+          id: d.id,
+          ...data,
+          monto: Number(data.monto || 0)
+        });
+      });
+    }
+
+    async function cargarCortes() {
+      listaCortesDiarios = [];
+      const q = query(rutaNegocio("cortes"), orderBy("creadoEn", "desc"));
+      const snap = await getDocs(q);
+
+      snap.forEach(d => {
+        const data = d.data();
+        listaCortesDiarios.push({
+          id: d.id,
+          ...data,
+          ventas: Number(data.ventas || 0),
+          gastos: Number(data.gastos || 0),
+          ganancia: Number(data.ganancia || 0),
+          detalleVentas: data.detalleVentas || [],
+          detalleGastos: data.detalleGastos || []
+        });
+      });
+    }
+
+    async function cargarHistorial() {
+      historicoMeses = [];
+      const snap = await getDocs(rutaNegocio("historialMeses"));
+
+      snap.forEach(d => {
+        historicoMeses.push({
+          id: d.id,
+          ...d.data()
+        });
+      });
+
+      historicoMeses.sort((a, b) => String(b.periodo).localeCompare(String(a.periodo)));
+    }
+
+    async function obtenerSiguienteFolio() {
+      const ref = doc(db, "usuarios", currentUser.uid);
+      const snap = await getDoc(ref);
+      const data = snap.data() || {};
+      const actual = Number(data.ultimoFolio || 100);
+      const siguiente = actual + 1;
+
+      await updateDoc(ref, { ultimoFolio: siguiente });
+      return `FAC-${siguiente}`;
+    }
+
+    /* =========================================================
+       INICIO APP
+       ========================================================= */
+    async function iniciarAplicacionConUsuario() {
+      document.getElementById("auth-screen").classList.add("hidden");
+      document.getElementById("pantalla-pago-bloqueo").classList.add("hidden");
+      document.getElementById("app-screen").classList.remove("hidden");
+
+      document.getElementById("user-display-email").textContent = currentUser.email;
+
+      try {
+        await cargarVentas();
+        await cargarGastos();
+        await cargarCortes();
+        await cargarHistorial();
+
+        await revisarCambioDeMes();
+        actualizarBannerSuscripcion();
+        inicializarGrafica();
+        inicializarEstadoGuia();
+        calcularYMostrar();
+        verificarAlertasFinDeMes();
+      } catch (error) {
+        console.error(error);
+        alert("No se pudieron cargar tus datos de Firebase. Revisa que las reglas publicadas coincidan con este HTML.");
+      }
+    }
+
+    async function revisarCambioDeMes() {
+      const ahora = new Date();
+      const key = mesKey(ahora);
+
+      const ref = doc(db, "usuarios", currentUser.uid);
+      const snap = await getDoc(ref);
+      const data = snap.data() || {};
+      const ultimoMes = data.mesActual || null;
+
+      if (!ultimoMes) {
+        await updateDoc(ref, { mesActual: key });
+        return;
+      }
+
+      if (ultimoMes === key) return;
+
+      const fechaAnterior = new Date(
+        Number(ultimoMes.split("-")[0]),
+        Number(ultimoMes.split("-")[1]) - 1,
+        1
+      );
+
+      const totalVentas = ventas.reduce((a, x) => a + Number(x.monto || 0), 0);
+      const totalGastos = gastos.reduce((a, x) => a + Number(x.monto || 0), 0);
+
+      if (ventas.length || gastos.length) {
+        const periodo = `${nombresMeses[fechaAnterior.getMonth()]} ${fechaAnterior.getFullYear()}`;
+
+        await setDoc(doc(db, "negocios", currentUser.uid, "historialMeses", ultimoMes), {
+          periodo,
+          ventas: totalVentas,
+          gastos: totalGastos,
+          ganancia: totalVentas - totalGastos,
+          actualizadoEn: serverTimestamp()
+        });
+      }
+
+      for (const v of ventas) {
+        await deleteDoc(doc(db, "negocios", currentUser.uid, "ventas", v.id));
+      }
+
+      for (const g of gastos) {
+        await deleteDoc(doc(db, "negocios", currentUser.uid, "gastos", g.id));
+      }
+
+      ventas = [];
+      gastos = [];
+      await updateDoc(ref, { mesActual: key });
+      await cargarHistorial();
+    }
+
+    function actualizarBannerSuscripcion() {
+      const estado = perfilUsuario?.estado || "prueba";
+      const vencimiento = Number(perfilUsuario?.vencimientoPrueba || 0);
+      const dias = Math.max(0, Math.ceil((vencimiento - Date.now()) / 86400000));
+
+      const banner = document.getElementById("bannerSuscripcion");
+      const icono = document.getElementById("iconoSub");
+      const titulo = document.getElementById("tituloSub");
+      const texto = document.getElementById("textoSub");
+
+      if (estado === "prueba") {
+        banner.className = "bg-indigo-50 border border-indigo-200 rounded-3xl p-4 md:p-5 shadow-sm flex items-center gap-4";
+        icono.textContent = "⏳";
+        titulo.textContent = "Período de Prueba Gratuita";
+        texto.textContent = `Te quedan ${dias} días de acceso libre.`;
+      } else {
+        banner.className = "bg-emerald-50 border border-emerald-200 rounded-3xl p-4 md:p-5 shadow-sm flex items-center gap-4";
+        icono.textContent = "⭐";
+        titulo.textContent = "Membresía Activa";
+        texto.textContent = "Tu cuenta está al corriente.";
+      }
+    }
+
+    /* =========================================================
+       GUÍA Y ALERTAS
+       ========================================================= */
+    function inicializarEstadoGuia() {
+      const key = "kash_guia_vista_" + currentUser.uid;
+      const yaVisto = localStorage.getItem(key);
+      const panel = document.getElementById("panelGuia");
+      const texto = document.getElementById("textoBtnGuia");
+
+      if (!yaVisto) {
+        panel.classList.remove("hidden");
+        texto.textContent = "Ocultar Guía Rápida";
+        localStorage.setItem(key, "true");
+      } else {
+        panel.classList.add("hidden");
+        texto.textContent = "¿Cómo usar?";
+      }
+    }
+
+    window.toggleGuia = function() {
+      const panel = document.getElementById("panelGuia");
+      const texto = document.getElementById("textoBtnGuia");
+
+      if (panel.classList.contains("hidden")) {
+        panel.classList.remove("hidden");
+        texto.textContent = "Ocultar Guía Rápida";
+      } else {
+        panel.classList.add("hidden");
+        texto.textContent = "¿Cómo usar?";
+      }
+    };
+
+    function verificarAlertasFinDeMes() {
+      const hoy = new Date();
+      const dia = hoy.getDate();
+      const ultimo = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).getDate();
+      const banner = document.getElementById("bannerAlertaMes");
+      const titulo = document.getElementById("tituloAlerta");
+      const texto = document.getElementById("textoAlerta");
+
+      if (dia === ultimo - 1) {
+        banner.classList.remove("hidden");
+        banner.classList.add("flex");
+        titulo.textContent = "⚠️ Faltan 2 días para cerrar el mes";
+        texto.textContent = "Revisa tus recibos y gastos pendientes.";
+      } else if (dia === ultimo) {
+        banner.classList.remove("hidden");
+        banner.classList.add("flex");
+        titulo.textContent = "🚨 ¡Hoy es el último día del mes!";
+        texto.textContent = "Asegúrate de registrar todo antes del cambio de mes.";
+      } else {
+        banner.classList.add("hidden");
+        banner.classList.remove("flex");
+      }
+    }
+
+    window.ocultarAlerta = function() {
+      document.getElementById("bannerAlertaMes").classList.add("hidden");
+      document.getElementById("bannerAlertaMes").classList.remove("flex");
+    };
+
+    /* =========================================================
+       GRÁFICA
+       ========================================================= */
+    function inicializarGrafica() {
+      const ctx = document.getElementById("graficaFinanzas").getContext("2d");
+
+      if (graficaFinanzas) graficaFinanzas.destroy();
+
+      graficaFinanzas = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: ["Ventas Totales", "Gastos / Compras"],
+          datasets: [{
+            label: "Monto en $",
+            data: [0, 0],
+            backgroundColor: ["#4f46e5", "#f43f5e"],
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    }
+
+    function calcularYMostrar() {
+      const totalVentas = ventas.reduce((a, x) => a + Number(x.monto || 0), 0);
+      const totalGastos = gastos.reduce((a, x) => a + Number(x.monto || 0), 0);
+      const ganancia = totalVentas - totalGastos;
+
+      document.getElementById("totalVendido").textContent = dinero(totalVentas);
+      document.getElementById("totalGastos").textContent = dinero(totalGastos);
+      document.getElementById("gananciaReal").textContent = dinero(ganancia);
+
+      if (graficaFinanzas) {
+        graficaFinanzas.data.datasets[0].data = [totalVentas, totalGastos];
+        graficaFinanzas.update();
+      }
+
+      renderizarVentas();
+      renderizarGastos();
+      renderizarCortesDiariosTabla();
+      renderizarHistorialGeneral(totalVentas, totalGastos, ganancia);
+    }
+
+    /* =========================================================
+       VENTAS
+       ========================================================= */
+    document.getElementById("formVenta").addEventListener("submit", async e => {
+      e.preventDefault();
+
+      const cliente = document.getElementById("inputCliente").value.trim();
+      const detalle = document.getElementById("inputDetalle").value.trim();
+      const monto = Number(document.getElementById("inputMontoVenta").value);
+
+      if (!cliente || !detalle || !Number.isFinite(monto) || monto <= 0) return;
+
+      const folio = await obtenerSiguienteFolio();
+
+      const nuevo = {
+        folio,
+        cliente,
+        detalle,
+        monto,
+        fecha: fechaHoraTexto(),
+        mes: mesKey(),
+        creadoEn: serverTimestamp()
+      };
+
+      const ref = await addDoc(rutaNegocio("ventas"), nuevo);
+      ventas.unshift({
+        id: ref.id,
+        ...nuevo,
+        monto
+      });
+
+      calcularYMostrar();
+      e.target.reset();
+      alert("Venta guardada correctamente en Firebase.");
+    });
+
+    function renderizarVentas() {
+      const tabla = document.getElementById("tablaVentas");
+      tabla.innerHTML = "";
+
+      if (!ventas.length) {
+        tabla.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-400">Aún no hay recibos este mes.</td></tr>';
+        return;
+      }
+
+      ventas.forEach((v, index) => {
+        const fila = document.createElement("tr");
+        fila.className = "hover:bg-slate-50/50";
+        fila.innerHTML = `
+          <td class="p-2 font-bold text-indigo-600">${escaparHTML(v.folio)}</td>
+          <td class="p-2 font-medium text-slate-800">${escaparHTML(v.cliente)}</td>
+          <td class="p-2 font-bold text-slate-900">${dinero(v.monto)}</td>
+          <td class="p-2 text-center space-x-1">
+            <button onclick="imprimirTicket(${index})"
+              class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 p-1.5 rounded-lg text-xs">🖨️</button>
+            <button onclick="eliminarVenta(${index})"
+              class="bg-rose-50 hover:bg-rose-100 text-rose-700 p-1.5 rounded-lg text-xs">❌</button>
+          </td>
+        `;
+        tabla.appendChild(fila);
+      });
+    }
+
+    window.eliminarVenta = async function(index) {
+      const v = ventas[index];
+      if (!v) return;
+
+      if (!confirm("¿Seguro que deseas eliminar este recibo?")) return;
+
+      await deleteDoc(doc(db, "negocios", currentUser.uid, "ventas", v.id));
+      ventas.splice(index, 1);
+      calcularYMostrar();
+    };
+
+    /* =========================================================
+       GASTOS
+       ========================================================= */
+    document.getElementById("formGasto").addEventListener("submit", async e => {
+      e.preventDefault();
+
+      const concepto = document.getElementById("inputConceptoGasto").value.trim();
+      const monto = Number(document.getElementById("inputMontoGasto").value);
+
+      if (!concepto || !Number.isFinite(monto) || monto <= 0) return;
+
+      const nuevo = {
+        concepto,
+        monto,
+        fecha: fechaHoraTexto(),
+        mes: mesKey(),
+        creadoEn: serverTimestamp()
+      };
+
+      const ref = await addDoc(rutaNegocio("gastos"), nuevo);
+
+      gastos.unshift({
+        id: ref.id,
+        ...nuevo,
+        monto
+      });
+
+      calcularYMostrar();
+      e.target.reset();
+      alert("Gasto guardado correctamente en Firebase.");
+    });
+
+    function renderizarGastos() {
+      const tabla = document.getElementById("tablaGastos");
+      tabla.innerHTML = "";
+
+      if (!gastos.length) {
+        tabla.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-slate-400">Aún no hay gastos este mes.</td></tr>';
+        return;
+      }
+
+      gastos.forEach((g, index) => {
+        const fila = document.createElement("tr");
+        fila.className = "hover:bg-slate-50/50";
+        fila.innerHTML = `
+          <td class="p-2 font-medium text-slate-800">${escaparHTML(g.concepto)}</td>
+          <td class="p-2 font-bold text-slate-900">${dinero(g.monto)}</td>
+          <td class="p-2 text-center">
+            <button onclick="eliminarGasto(${index})"
+              class="bg-rose-50 hover:bg-rose-100 text-rose-700 p-1.5 rounded-lg text-xs">❌</button>
+          </td>
+        `;
+        tabla.appendChild(fila);
+      });
+    }
+
+    window.eliminarGasto = async function(index) {
+      const g = gastos[index];
+      if (!g) return;
+
+      if (!confirm("¿Seguro que deseas eliminar este gasto?")) return;
+
+      await deleteDoc(doc(db, "negocios", currentUser.uid, "gastos", g.id));
+      gastos.splice(index, 1);
+      calcularYMostrar();
+    };
+
+    /* =========================================================
+       CORTES
+       ========================================================= */
+    window.generarCorteCaja = async function() {
+      const totalVentas = ventas.reduce((a, x) => a + Number(x.monto || 0), 0);
+      const totalGastos = gastos.reduce((a, x) => a + Number(x.monto || 0), 0);
+      const ganancia = totalVentas - totalGastos;
+      const fecha = fechaHoraTexto();
+
+      const nuevoCorte = {
+        fecha,
+        ventas: totalVentas,
+        gastos: totalGastos,
+        ganancia,
+        detalleVentas: ventas.map(v => ({
+          folio: v.folio,
+          cliente: v.cliente,
+          detalle: v.detalle,
+          monto: Number(v.monto || 0)
+        })),
+        detalleGastos: gastos.map(g => ({
+          concepto: g.concepto,
+          monto: Number(g.monto || 0)
+        })),
+        creadoEn: serverTimestamp()
+      };
+
+      const ref = await addDoc(rutaNegocio("cortes"), nuevoCorte);
+
+      listaCortesDiarios.unshift({
+        id: ref.id,
+        ...nuevoCorte
+      });
+
+      renderizarCortesDiariosTabla();
+
+      let mensaje = "⚡ *CORTE DE CAJA - KASHVENTAS*\n";
+      mensaje += `📅 Fecha: ${fecha}\n\n`;
+      mensaje += `📈 Total Vendido: ${dinero(totalVentas)}\n`;
+      mensaje += `📦 Total Gastos: ${dinero(totalGastos)}\n`;
+      mensaje += `💰 Ganancia Neta Real: ${dinero(ganancia)}\n\n`;
+      mensaje += "_Reporte guardado en KashVentas_";
+
+      document.getElementById("textoCorteWhatsApp").value = mensaje;
+      document.getElementById("modalCorte").classList.remove("hidden");
+    };
+
+    function renderizarCortesDiariosTabla() {
+      const tabla = document.getElementById("tablaCortesDiarios");
+      tabla.innerHTML = "";
+
+      if (!listaCortesDiarios.length) {
+        tabla.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">Aún no hay cortes guardados.</td></tr>';
+        return;
+      }
+
+      listaCortesDiarios.forEach((c, index) => {
+        const fila = document.createElement("tr");
+        fila.className = "hover:bg-slate-50/50";
+        fila.innerHTML = `
+          <td class="p-3 font-bold text-indigo-600">${escaparHTML(c.fecha)}</td>
+          <td class="p-3 font-semibold">${dinero(c.ventas)}</td>
+          <td class="p-3 font-semibold text-rose-600">${dinero(c.gastos)}</td>
+          <td class="p-3 font-extrabold text-emerald-600">${dinero(c.ganancia)}</td>
+          <td class="p-3 text-center">
+            <button onclick="verDetalleCorte(${index})"
+              class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-xl text-xs font-bold">
+              Ver Desglose 👁️
+            </button>
+          </td>
+        `;
+        tabla.appendChild(fila);
+      });
+    }
+
+    window.verDetalleCorte = function(index) {
+      const corte = listaCortesDiarios[index];
+      if (!corte) return;
+
+      document.getElementById("detalleCorteTitulo").textContent = `Corte del: ${corte.fecha}`;
+      document.getElementById("detTotalVentas").textContent = dinero(corte.ventas);
+      document.getElementById("detTotalGastos").textContent = dinero(corte.gastos);
+      document.getElementById("detalleCorteGanancia").textContent = dinero(corte.ganancia);
+
+      const ventasEl = document.getElementById("detalleCorteVentas");
+      ventasEl.innerHTML = "";
+
+      if (!corte.detalleVentas?.length) {
+        ventasEl.innerHTML = '<tr><td class="p-3 text-center text-slate-400">No hubo ventas.</td></tr>';
+      } else {
+        corte.detalleVentas.forEach(v => {
+          ventasEl.innerHTML += `
+            <tr>
+              <td class="p-3">
+                <strong class="text-indigo-600">${escaparHTML(v.folio)}</strong>
+                - ${escaparHTML(v.cliente)}
+                <span class="text-slate-400">(${escaparHTML(v.detalle)})</span>
+              </td>
+              <td class="p-3 font-black text-right">${dinero(v.monto)}</td>
+            </tr>
+          `;
+        });
+      }
+
+      const gastosEl = document.getElementById("detalleCorteGastos");
+      gastosEl.innerHTML = "";
+
+      if (!corte.detalleGastos?.length) {
+        gastosEl.innerHTML = '<tr><td class="p-3 text-center text-slate-400">No hubo gastos.</td></tr>';
+      } else {
+        corte.detalleGastos.forEach(g => {
+          gastosEl.innerHTML += `
+            <tr>
+              <td class="p-3 font-medium">${escaparHTML(g.concepto)}</td>
+              <td class="p-3 font-black text-right">${dinero(g.monto)}</td>
+            </tr>
+          `;
+        });
+      }
+
+      document.getElementById("modalDetalleCorte").classList.remove("hidden");
+    };
+
+    window.limpiarCortesDiarios = async function() {
+      if (!listaCortesDiarios.length) return;
+      if (!confirm("¿Deseas borrar todo el historial de cortes diarios?")) return;
+
+      for (const corte of listaCortesDiarios) {
+        await deleteDoc(doc(db, "negocios", currentUser.uid, "cortes", corte.id));
+      }
+
+      listaCortesDiarios = [];
+      renderizarCortesDiariosTabla();
+    };
+
+    window.cerrarCorteCaja = function() {
+      document.getElementById("modalCorte").classList.add("hidden");
+    };
+
+    window.cerrarDetalleCorte = function() {
+      document.getElementById("modalDetalleCorte").classList.add("hidden");
+    };
+
+    window.copiarCorteWhatsApp = async function() {
+      const texto = document.getElementById("textoCorteWhatsApp").value;
+
+      try {
+        await navigator.clipboard.writeText(texto);
+        alert("¡Corte copiado! Ya puedes pegarlo en WhatsApp.");
+      } catch {
+        const textarea = document.getElementById("textoCorteWhatsApp");
+        textarea.select();
+        document.execCommand("copy");
+        alert("¡Corte copiado!");
+      }
+    };
+
+    /* =========================================================
+       HISTORIAL
+       ========================================================= */
+    function renderizarHistorialGeneral(ventasActuales, gastosActuales, gananciaActual) {
+      const tabla = document.getElementById("tablaHistorialMeses");
+      tabla.innerHTML = "";
+
+      const fecha = new Date();
+      const actual = {
+        periodo: `${nombresMeses[fecha.getMonth()]} ${fecha.getFullYear()} (En curso)`,
+        ventas: ventasActuales,
+        gastos: gastosActuales,
+        ganancia: gananciaActual
+      };
+
+      const lista = [actual, ...historicoMeses];
+
+      let totalV = 0;
+      let totalG = 0;
+      let totalN = 0;
+
+      lista.forEach(item => {
+        const v = Number(item.ventas || 0);
+        const g = Number(item.gastos || 0);
+        const n = Number(item.ganancia ?? (v - g));
+
+        totalV += v;
+        totalG += g;
+        totalN += n;
+
+        tabla.innerHTML += `
+          <tr class="hover:bg-slate-50/50">
+            <td class="p-3 font-bold text-indigo-600">${escaparHTML(item.periodo)}</td>
+            <td class="p-3 font-semibold">${dinero(v)}</td>
+            <td class="p-3 font-semibold text-rose-600">${dinero(g)}</td>
+            <td class="p-3 font-extrabold text-emerald-600">${dinero(n)}</td>
+          </tr>
+        `;
+      });
+
+      document.getElementById("historicoTotalVentas").textContent = dinero(totalV);
+      document.getElementById("historicoTotalGastos").textContent = dinero(totalG);
+      document.getElementById("historicoGananciaNeta").textContent = dinero(totalN);
+    }
+
+    /* =========================================================
+       NAVEGACIÓN
+       ========================================================= */
+    window.cambiarVista = function(vista) {
+      const vistas = {
+        app: document.getElementById("vistaApp"),
+        cortesDiarios: document.getElementById("vistaCortesDiarios"),
+        historial: document.getElementById("vistaHistorial")
+      };
+
+      Object.values(vistas).forEach(v => v.classList.add("hidden"));
+
+      const botones = [
+        document.getElementById("btnApp"),
+        document.getElementById("btnCortesDiarios"),
+        document.getElementById("btnHistorial")
+      ];
+
+      botones.forEach(b => {
+        b.className = "text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl font-bold whitespace-nowrap";
+      });
+
+      vistas[vista]?.classList.remove("hidden");
+
+      if (vista === "app") {
+        document.getElementById("btnApp").className =
+          "text-xs bg-indigo-600 text-white px-3 py-2 rounded-xl font-bold whitespace-nowrap shadow-sm";
+      }
+
+      if (vista === "cortesDiarios") {
+        document.getElementById("btnCortesDiarios").className =
+          "text-xs bg-indigo-600 text-white px-3 py-2 rounded-xl font-bold whitespace-nowrap shadow-sm";
+      }
+
+      if (vista === "historial") {
+        document.getElementById("btnHistorial").className =
+          "text-xs bg-indigo-600 text-white px-3 py-2 rounded-xl font-bold whitespace-nowrap shadow-sm";
+      }
+    };
+
+    /* =========================================================
+       IMPRESIÓN
+       ========================================================= */
+    window.imprimirTicket = function(index) {
+      const v = ventas[index];
+      if (!v) return;
+
+      const w = window.open("", "_blank", "width=450,height=650");
+      if (!w) {
+        alert("El navegador bloqueó la ventana de impresión.");
+        return;
+      }
+
+      w.document.write(`
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+          <meta charset="UTF-8">
+          <title>Recibo ${escaparHTML(v.folio)} - KashVentas</title>
+          <style>
+            body{font-family:Arial,sans-serif;padding:30px;color:#0f172a}
+            .ticket{max-width:380px;margin:auto;border:1px solid #e2e8f0;border-radius:20px;padding:25px}
+            h1{color:#4f46e5;text-align:center}
+            .line{border-top:1px dashed #94a3b8;margin:20px 0}
+            .total{font-size:22px;font-weight:bold;display:flex;justify-content:space-between}
+          </style>
+        </head>
+        <body>
+          <div class="ticket">
+            <h1>KASHVENTAS</h1>
+            <p style="text-align:center">Recibo / Comprobante de Venta</p>
+            <div class="line"></div>
+            <p><strong>Folio:</strong> ${escaparHTML(v.folio)}</p>
+            <p><strong>Cliente:</strong> ${escaparHTML(v.cliente)}</p>
+            <div class="line"></div>
+            <p><strong>Concepto:</strong></p>
+            <p>${escaparHTML(v.detalle)}</p>
+            <div class="line"></div>
+            <div class="total">
+              <span>Total:</span>
+              <span>${dinero(v.monto)}</span>
+            </div>
+            <p style="text-align:center;margin-top:25px;font-size:12px;color:#64748b">
+              Gracias por tu compra.
+            </p>
+          </div>
+          <script>
+            window.onload=function(){window.print();window.close();}
+          <\/script>
+        </body>
+        </html>
+      `);
+      w.document.close();
+    };
+
+    window.imprimirReporteGeneral = function() {
+      const totalVentas = ventas.reduce((a, x) => a + Number(x.monto || 0), 0);
+      const totalGastos = gastos.reduce((a, x) => a + Number(x.monto || 0), 0);
+      const ganancia = totalVentas - totalGastos;
+
+      const w = window.open("", "_blank", "width=800,height=700");
+      if (!w) {
+        alert("El navegador bloqueó la ventana de impresión.");
+        return;
+      }
+
+      const filasVentas = ventas.map(v => `
+        <tr>
+          <td>${escaparHTML(v.folio)}</td>
+          <td>${escaparHTML(v.cliente)}</td>
+          <td>${escaparHTML(v.detalle)}</td>
+          <td>${dinero(v.monto)}</td>
+        </tr>
+      `).join("");
+
+      const filasGastos = gastos.map(g => `
+        <tr>
+          <td>${escaparHTML(g.concepto)}</td>
+          <td>${dinero(g.monto)}</td>
+        </tr>
+      `).join("");
+
+      w.document.write(`
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+          <meta charset="UTF-8">
+          <title>Reporte Financiero - KashVentas</title>
+          <style>
+            body{font-family:Arial,sans-serif;padding:35px;color:#0f172a}
+            h1{margin-bottom:5px}
+            .cards{display:flex;gap:15px;margin:25px 0}
+            .card{border:1px solid #e2e8f0;padding:15px;border-radius:12px;flex:1}
+            table{width:100%;border-collapse:collapse;margin-top:12px}
+            th,td{border-bottom:1px solid #e2e8f0;padding:9px;text-align:left}
+            th{background:#f8fafc}
+            .green{color:#059669}
+          </style>
+        </head>
+        <body>
+          <h1>KASHVENTAS</h1>
+          <p>Reporte Financiero Oficial</p>
+          <p>Fecha: ${fechaLocalTexto()}</p>
+
+          <div class="cards">
+            <div class="card"><strong>Ventas</strong><br>${dinero(totalVentas)}</div>
+            <div class="card"><strong>Gastos</strong><br>${dinero(totalGastos)}</div>
+            <div class="card"><strong>Ganancia</strong><br><span class="green">${dinero(ganancia)}</span></div>
+          </div>
+
+          <h2>Ventas del mes</h2>
+          <table>
+            <thead><tr><th>Folio</th><th>Cliente</th><th>Concepto</th><th>Total</th></tr></thead>
+            <tbody>${filasVentas || "<tr><td colspan='4'>Sin ventas.</td></tr>"}</tbody>
+          </table>
+
+          <h2>Gastos del mes</h2>
+          <table>
+            <thead><tr><th>Concepto</th><th>Monto</th></tr></thead>
+            <tbody>${filasGastos || "<tr><td colspan='2'>Sin gastos.</td></tr>"}</tbody>
+          </table>
+
+          <script>
+            window.onload=function(){window.print();window.close();}
+          <\/script>
+        </body>
+        </html>
+      `);
+
+      w.document.close();
+    };
+
+    /* =========================================================
+       ESTADO INICIAL
+       ========================================================= */
+    mostrarModoAuth("login");
+  </script>
+</body>
+</html>
